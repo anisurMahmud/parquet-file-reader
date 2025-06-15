@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');  // npm install uuid
 require('dotenv').config();
+const { ApiResponse, ApiErrorResponse } = require("../utils/global");
 
 
 const minioClient = new Minio.Client({
@@ -243,7 +244,7 @@ exports.getBarcodeDetails = async (req, res) => {
     const {data} = req.body;
     const barcode = data?.barcode;
     if (!barcode) {
-      return res.status(400).send('Barcode is required.');
+      return ApiErrorResponse(res, 'BAD_REQUEST', 'Barcode is required.');
     }
 
     const { bucketName, objectName } = extractBarcodeDetails(barcode);
@@ -251,10 +252,10 @@ exports.getBarcodeDetails = async (req, res) => {
     const result = await getBarcodeDetailsFromMinio(bucketName, objectName, barcode);
 
     console.log('Barcode details fetched successfully:');
-    res.json(result);
+    return ApiResponse(res, 'SUCCESS', result);
   } catch (err) {
     console.error('Error fetching barcode details:', err);
-    res.status(500).send('Failed to fetch barcode details.');
+    throw err;
 
   }
 };
